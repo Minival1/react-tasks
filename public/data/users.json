@@ -1,0 +1,14 @@
+{
+  "admin": {
+    "id": 1,
+    "login": "admin",
+    "password": "admin",
+    "userType": "admin"
+  },
+  "vasya": {
+    "id": 2,
+    "login": "vasya",
+    "password": "qwerty",
+    "userType": "user"
+  }
+}
