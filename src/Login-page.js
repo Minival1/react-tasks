@@ -1,11 +1,12 @@
 import {Form, Input, Button} from 'antd';
-import { useHistory } from "react-router-dom";
-import {routes} from "./routes"
-import {withAuthRedirect} from "./hoc/auth-redirect";
+import { useNavigate } from "react-router-dom";
+import {useDispatch} from "react-redux";
+import {login} from "./store/slices/authSlice";
 
 const LoginPage = () => {
 
-    const history = useHistory()
+    const navigate = useNavigate()
+    const dispatch = useDispatch()
 
     const onFinish = (values) => {
         fetch("data/users.json").then(res => res.json())
@@ -17,19 +18,13 @@ const LoginPage = () => {
 
                         const obj = {
                             login: user.login,
-                            userType: user.userType
+                            role: user.role
                         }
-                        // потом усложнить
-                        localStorage.setItem("user", JSON.stringify(obj))
-                        // реализовать идти куда он хотел до этого
-                        history.push(routes.common.url)
+                        dispatch(login(obj))
+                        navigate(-1)
                     }
                 }
             })
-    };
-
-    const onFinishFailed = (errorInfo) => {
-        console.log('Failed:', errorInfo);
     };
 
     return (
@@ -42,7 +37,6 @@ const LoginPage = () => {
                 wrapperCol={{ span: 16 }}
                 initialValues={{ remember: true }}
                 onFinish={onFinish}
-                onFinishFailed={onFinishFailed}
                 autoComplete="off"
             >
                 <Form.Item
@@ -71,4 +65,4 @@ const LoginPage = () => {
     )
 }
 
-export default withAuthRedirect(LoginPage)
+export default LoginPage

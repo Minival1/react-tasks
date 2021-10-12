@@ -1,13 +1,39 @@
-import {BrowserRouter, Link, Route, Switch, useHistory, useLocation, Redirect} from "react-router-dom";
+import {BrowserRouter, Link, Route, Routes, Navigate} from "react-router-dom";
 import CommonPage from "./Common-page";
 import UserPage from "./User-page";
 import AdminPage from "./Admin-page";
 import LoginPage from "./Login-page";
 import {routes} from "./routes"
+import {React, useEffect} from "react";
+import {useDispatch, useSelector} from "react-redux";
+import {login} from "./store/slices/authSlice"
+import PrivateRoute from "./PrivateRoute";
+import {ROLE} from "./data/roles"
 import "./App.css"
-import React from "react";
 
 const App = () => {
+
+    const { isAuth } = useSelector((store) => store.auth)
+    const dispatch = useDispatch()
+
+    const user = JSON.parse(localStorage.getItem("user"))
+
+    if (user && !isAuth) {
+        dispatch(login(user))
+    }
+
+    const renderPrivateLinks = () => {
+        return Object.values(routes).map(route => {
+            if (route.roles?.includes(user?.role)) {
+                return (
+                    <li key={route.name}>
+                        <Link to={route.url}>{route.name}</Link>
+                    </li>
+                )
+            }
+        })
+    }
+
 
     return (
         <BrowserRouter>
@@ -15,33 +41,16 @@ const App = () => {
                 <div>
                     <nav>
                         <ul>
-                            <li>
-                                <Link to={routes.common.url}>Common</Link>
-                            </li>
-                            <li>
-                                <Link to={routes.admin.url}>Admin</Link>
-                            </li>
-                            <li>
-                                <Link to={routes.user.url}>User</Link>
-                            </li>
-                            <li>
-                                <Link to={routes.login.url}>Login</Link>
-                            </li>
+                            {renderPrivateLinks()}
                         </ul>
                     </nav>
 
-                    {/* A <Switch> looks through its children <Route>s and
-            renders the first one that matches the current URL. */}
-                    <Switch>
-                        <Route path={routes.common.url} render={CommonPage}>
-                        </Route>
-                        <Route path={routes.admin.url} render={AdminPage}>
-                        </Route>
-                        <Route path={routes.user.url} render={UserPage}>
-                        </Route>
-                        <Route path={routes.login.url} render={LoginPage}>
-                        </Route>
-                    </Switch>
+                    <Routes>
+                        <PrivateRoute path={routes["common-page"].url} element={<CommonPage/>} requiredRoles={[ROLE.admin, ROLE.user]} />
+                        <PrivateRoute path={routes["admin-page"].url} element={<AdminPage/>} requiredRoles={[ROLE.admin]} />
+                        <PrivateRoute path={routes["user-page"].url} element={<UserPage/>} requiredRoles={[ROLE.user]} />
+                        <Route path={routes["login-page"].url} element={<LoginPage/>} />
+                    </Routes>
                 </div>
             </div>
         </BrowserRouter>

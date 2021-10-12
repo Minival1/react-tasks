@@ -1,18 +1,24 @@
+import {ROLE} from "./data/roles"
+
 export const routes = {
-    common: {
-        url: "/common",
-        access: "admin" || "user",
+    "common-page": {
+        url: "/common-page",
+        name: "Common",
+        roles: [ROLE.admin, ROLE.user]
     },
-    admin: {
-        url: "/admin",
-        access: "admin",
+    "admin-page": {
+        url: "/admin-page",
+        name: "Admin",
+        roles: [ROLE.admin]
     },
-    login: {
-        url: "/login",
-        access: null,
+    "user-page": {
+        url: "/user-page",
+        name: "User",
+        roles: [ROLE.user]
     },
-    user: {
-        url: "/user",
-        access: "user",
+    "login-page": {
+        url: "/login-page",
+        name: "Login",
+        roles: [ROLE.admin, ROLE.user]
     },
 }
