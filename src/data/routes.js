@@ -1,4 +1,4 @@
-import {ROLE} from "./data/roles"
+import {ROLE} from "./roles"
 
 export const routes = {
     "common-page": {

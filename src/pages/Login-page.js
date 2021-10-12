@@ -1,7 +1,7 @@
 import {Form, Input, Button} from 'antd';
 import { useNavigate } from "react-router-dom";
 import {useDispatch} from "react-redux";
-import {login} from "./store/slices/authSlice";
+import {login} from "../store/slices/authSlice";
 
 const LoginPage = () => {
 
@@ -35,7 +35,6 @@ const LoginPage = () => {
                 name="basic"
                 labelCol={{ span: 3 }}
                 wrapperCol={{ span: 16 }}
-                initialValues={{ remember: true }}
                 onFinish={onFinish}
                 autoComplete="off"
             >

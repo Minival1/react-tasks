@@ -1,0 +1,48 @@
+.timeWrapper {
+	display: flex;
+}
+
+.time {
+	font-weight: bold;
+}
+
+.time + .time {
+	margin-left: 30px;
+}
+
+.timepicker {
+	display: flex;
+	align-items: flex-end;
+	margin-bottom: 40px;
+}
+
+.timepicker > * + *{
+	margin-left: 30px;
+}
+
+.table {
+	border: 1px solid #1890ff;
+	border-collapse: collapse;
+	width: 100%;
+	font-size: 16px;
+}
+
+.table tr, .table td {
+	border: 1px solid #1890ff;
+	padding: 5px 20px;
+}
+
+.tableTitle {
+	font-weight: bold;
+	text-align: center;
+	font-size: 18px;
+	color: #1890ff;
+}
+
+.colTitle {
+	width: 70%;
+}
+
+.colTime {
+
+}

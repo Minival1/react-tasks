@@ -1,5 +1,5 @@
 import {Link} from "react-router-dom";
-import {routes} from "../routes"
+import {routes} from "../data/routes"
 import { Layout, Menu } from 'antd';
 
 const { Header } = Layout;

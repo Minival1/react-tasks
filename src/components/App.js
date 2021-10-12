@@ -1,16 +1,16 @@
 import {BrowserRouter, Link, Route, Routes, Navigate} from "react-router-dom";
-import CommonPage from "./Common-page";
-import UserPage from "./User-page";
-import AdminPage from "./Admin-page";
-import LoginPage from "./Login-page";
-import {routes} from "./routes"
+import CommonPage from "../pages/Common-page";
+import UserPage from "../pages/User-page";
+import AdminPage from "../pages/Admin-page";
+import LoginPage from "../pages/Login-page";
+import {routes} from "../data/routes"
 import {React, useEffect} from "react";
 import {useDispatch, useSelector} from "react-redux";
-import {login} from "./store/slices/authSlice"
+import {login} from "../store/slices/authSlice"
 import PrivateRoute from "./PrivateRoute";
-import {ROLE} from "./data/roles"
+import {ROLE} from "../data/roles"
 import "./App.css"
-import Header from "./components/Header";
+import Header from "./Header";
 
 const App = () => {
 

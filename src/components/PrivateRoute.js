@@ -1,6 +1,6 @@
 import { Navigate, Route, useLocation } from 'react-router-dom';
 import {useSelector} from "react-redux";
-import { routes } from "./routes"
+import { routes } from "../data/routes"
 
 const PrivateElement = ({ element, requiredRoles }) => {
     const location = useLocation();

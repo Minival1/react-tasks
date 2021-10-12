@@ -1,0 +1,12 @@
+@import '../../node_modules/antd/dist/antd.css';
+@import '../../node_modules/@progress/kendo-theme-default/dist/all.css';
+
+* {
+    box-sizing: border-box;
+}
+
+.container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
