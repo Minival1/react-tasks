@@ -27,23 +27,33 @@
 	font-size: 16px;
 }
 
+.tableWrapper {
+	overflow-x: scroll;
+}
+
 .table tr, .table td {
 	border: 1px solid #1890ff;
-	padding: 5px 20px;
+	padding: 15px 20px;
 }
 
 .tableTitle {
 	font-weight: bold;
 	text-align: center;
 	font-size: 18px;
-	color: #1890ff;
-	background: #000;
+	color: #fff;
+	background: #a53838;
 }
 
 .colTitle {
-	width: 70%;
+	min-width: 300px;
+	position: sticky;
+	background: #fff;
+	border: 1px solid #1890ff !important;
+	left: 0;
+	z-index: 3;
 }
 
 .colTime {
-
+	min-width: 140px;
+	text-align: center;
 }
