@@ -44,6 +44,18 @@
 	background: #a53838;
 }
 
+.tableEditable {
+	font-weight: bold;
+	text-align: center;
+	font-size: 18px;
+	color: #fff;
+	background: green;
+}
+
+.tableSave {
+	cursor: pointer;
+}
+
 .colTitle {
 	min-width: 300px;
 	position: sticky;

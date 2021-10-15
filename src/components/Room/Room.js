@@ -1,49 +1,54 @@
 import React, {useState} from "react";
 import {Button, Form} from 'antd';
+import {SaveOutlined} from '@ant-design/icons';
 import styles from "./Room.module.css";
 import {TimePicker} from "@progress/kendo-react-dateinputs";
-import {format, isWithinInterval, parse, differenceInMinutes} from 'date-fns'
-
-const data = [
-    {
-        title: "Аудитория №1",
-        id: 1,
-        children: [
-            {
-                title: 'Мероприятие №1 с 8:00 до 10:30',
-                startTime: "8:00",
-                endTime: "10:30",
-                id: 1,
-            },
-            {
-                title: 'Мероприятие №2 с 11:00 до 13:00',
-                startTime: "11:00",
-                endTime: "13:00",
-                id: 2,
-            },
-        ]
-    },
-    {
-        title: "Аудитория №2",
-        id: 2,
-        children: [
-            {
-                title: 'Мероприятие №1 с 8:00 до 11:00',
-                startTime: "8:00",
-                endTime: "11:00",
-                id: 1,
-            },
-            {
-                title: 'Мероприятие №2 с 11:00 до 13:00',
-                startTime: "11:00",
-                endTime: "13:00",
-                id: 2,
-            },
-        ]
-    },
-]
+import {format, isWithinInterval, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-fns'
+import uuid from 'react-uuid'
+import produce from "immer";
+import {DndProvider, useDrag} from 'react-dnd'
+import {HTML5Backend} from 'react-dnd-html5-backend'
 
 const Room = () => {
+
+    const [data, setData] = useState([
+        {
+            title: "Аудитория №1",
+            id: 1,
+            children: [
+                {
+                    title: 'Мероприятие №1 с 8:00 до 11:00',
+                    startTime: "8:00",
+                    endTime: "11:00",
+                    id: 1,
+                },
+                {
+                    title: 'Мероприятие №2 с 11:00 до 13:00',
+                    startTime: "11:00",
+                    endTime: "13:00",
+                    id: 2,
+                },
+            ]
+        },
+        {
+            title: "Аудитория №2",
+            id: 2,
+            children: [
+                {
+                    title: 'Мероприятие №1 с 8:00 до 10:30',
+                    startTime: "8:00",
+                    endTime: "10:30",
+                    id: 1,
+                },
+                {
+                    title: 'Мероприятие №2 с 11:00 до 13:00',
+                    startTime: "11:00",
+                    endTime: "13:00",
+                    id: 2,
+                },
+            ]
+        },
+    ])
 
     const time = {
         format: "HH:mm",
@@ -62,16 +67,47 @@ const Room = () => {
         return differenceInMinutes(parseEndTime, parseStartTime) / 60 * 2
     }
 
-    const fillEmptyCols = () => {
-
-    }
-
     const onFinish = (values) => {
         const formatStartDate = format(values.start_time, time.format)
         const formatEndDate = format(values.end_time, time.format)
 
-        console.log(isWithinInterval(values.start_time, {
-            start: values.start_time, end: values.end_time
+        const overlappingArr = data.map((row, rowIndex) => {
+            return row.children.map(item => {
+                const date = new Date(null, null, null)
+                const parseItemStartDate = parse(item.startTime, time.format, date)
+                const parseItemEndDate = parse(item.endTime, time.format, date)
+
+                return areIntervalsOverlapping(
+                    {start: values.start_time, end: values.end_time},
+                    {start: parseItemStartDate, end: parseItemEndDate}
+                )
+            })
+        })
+
+        const index = overlappingArr.findIndex(arr => !arr.includes(true))
+
+        if (index !== -1) {
+            const newItem = {
+                title: '',
+                startTime: formatStartDate,
+                endTime: formatEndDate,
+                isEditable: true
+            }
+            setData(produce((state) => {
+                state[index].children.push(newItem)
+                state[index].children.sort((prev, next) => {
+                    const date = new Date(null, null, null)
+                    return parse(prev.endTime, time.format, date) > parse(next.endTime, time.format, date) ? 1 : -1
+                })
+            }))
+        } else {
+            alert("Нет подходящих аудиторий, попробуйте изменить время")
+        }
+    }
+
+    const onSave = (rowIndex, colIndex) => () => {
+        setData(produce(state => {
+            state[rowIndex].children[colIndex].isEditable = false
         }))
     }
 
@@ -80,7 +116,7 @@ const Room = () => {
             <Form initialValues={{
                 ["start_time"]: time.min,
                 ["end_time"]: time.max
-            }} name="test" onFinish={onFinish}>
+            }} name="time" onFinish={onFinish}>
                 <div className={styles.timepicker}>
                     <div>
                         <p>Начало мероприятия</p>
@@ -104,44 +140,51 @@ const Room = () => {
                 <table className={styles.table}>
                     <thead>
                     <tr>
-                        <td className={styles.colTitle} />
-                        {time.list.map(item => <td key={item} className={styles.colTime}>{item}</td>)}
+                        <td className={styles.colTitle}/>
+                        {time.list.map(item => <td key={uuid()} className={styles.colTime}>{item}</td>)}
                     </tr>
                     </thead>
                     <tbody>
-                    {data.map(row => {
+                    {data.map((row, rowIndex) => {
+                        let countCols = 0
                         return (
-                            <tr key={row.id}>
+                            <tr key={uuid()}>
                                 <td className={styles.colTitle}>{row.title}</td>
 
-                                {row.children.map((col, i, arr) => {
-                                        const prev = arr[i - 1]
+                                {row.children.map((col, colIndex, arr) => {
+                                        const prev = arr[colIndex - 1]
+                                        // отступ по колонкам
                                         let offsetCols = 0
 
                                         if (prev) {
                                             offsetCols = getCountCols(prev.endTime, col.startTime)
                                         }
 
+                                        // сколько колонок займет блок
                                         const colspan = getCountCols(col.startTime, col.endTime)
+                                        countCols += offsetCols + colspan
 
-                                        if (offsetCols) {
-                                            const emptyCols = new Array(offsetCols).fill(Date.now())
-                                                .map((id) => <td key={id} className={styles.colTime} />)
-
-                                            return (
-                                                <React.Fragment>
-                                                    {emptyCols}
-                                                    <td colSpan={colspan} key={col.id}
+                                        const emptyCols = new Array(offsetCols).fill(null).map(() => <td key={uuid()}
+                                                                                                         className={styles.colTime}/>)
+                                        return (
+                                            <React.Fragment key={uuid()}>
+                                                {emptyCols}
+                                                {col.isEditable ?
+                                                    <td colSpan={colspan}
+                                                        className={styles.tableEditable}>{col.title}
+                                                        <SaveOutlined onClick={onSave(rowIndex, colIndex)}
+                                                                      className={styles.tableSave}/>
+                                                    </td> :
+                                                    <td colSpan={colspan}
                                                         className={styles.tableTitle}>{col.title}</td>
-                                                </React.Fragment>
-                                            )
-                                        } else {
-                                            return <td colSpan={colspan} key={col.id}
-                                                       className={styles.tableTitle}>{col.title}</td>
-                                        }
+                                                }
+                                            </React.Fragment>
+                                        )
                                     }
                                 )}
-                                {fillEmptyCols()}
+                                {/* пустые колонки после мероприятий */}
+                                {new Array(time.list.length - countCols).fill(null).map(() => <td key={uuid()}
+                                                                                                  className={styles.colTime}/>)}
                             </tr>
                         )
                     })}
