@@ -1,4 +1,4 @@
-import {BrowserRouter, Link, Route, Routes, Navigate} from "react-router-dom";
+import {BrowserRouter, Route, Switch} from "react-router-dom";
 import CommonPage from "../pages/Common-page";
 import UserPage from "../pages/User-page";
 import AdminPage from "../pages/Admin-page";
@@ -28,14 +28,14 @@ const App = () => {
             <div>
                 <Header/>
                 <div className="container">
-                    <Routes>
-                        <PrivateRoute path={routes["common-page"].url} element={<CommonPage/>}
+                    <Switch>
+                        <PrivateRoute path={routes["common-page"].url} component={CommonPage}
                                       requiredRoles={[ROLE.admin, ROLE.user]}/>
-                        <PrivateRoute path={routes["admin-page"].url} element={<AdminPage/>}
+                        <PrivateRoute path={routes["admin-page"].url} component={AdminPage}
                                       requiredRoles={[ROLE.admin]}/>
-                        <PrivateRoute path={routes["user-page"].url} element={<UserPage/>} requiredRoles={[ROLE.user]}/>
-                        <Route path={routes["login-page"].url} element={<LoginPage/>}/>
-                    </Routes>
+                        <PrivateRoute path={routes["user-page"].url} component={UserPage} requiredRoles={[ROLE.user]}/>
+                        <Route path={routes["login-page"].url} component={LoginPage}/>
+                    </Switch>
                 </div>
             </div>
         </BrowserRouter>

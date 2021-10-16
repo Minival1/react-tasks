@@ -1,11 +1,11 @@
 import {Form, Input, Button} from 'antd';
-import { useNavigate } from "react-router-dom";
+import { useHistory } from "react-router-dom";
 import {useDispatch} from "react-redux";
 import {login} from "../store/slices/authSlice";
 
 const LoginPage = () => {
 
-    const navigate = useNavigate()
+    const history = useHistory()
     const dispatch = useDispatch()
 
     const onFinish = (values) => {
@@ -21,7 +21,7 @@ const LoginPage = () => {
                             role: user.role
                         }
                         dispatch(login(obj))
-                        navigate(-1)
+                        history.goBack()
                     }
                 }
             })
