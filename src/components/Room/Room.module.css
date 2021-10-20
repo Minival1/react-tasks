@@ -50,6 +50,7 @@
 	font-size: 18px;
 	color: #fff;
 	background: green;
+	z-index: 3333;
 }
 
 .tableSave {

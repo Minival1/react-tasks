@@ -3,11 +3,10 @@ import {Button, Form} from 'antd';
 import {SaveOutlined} from '@ant-design/icons';
 import styles from "./Room.module.css";
 import {TimePicker} from "@progress/kendo-react-dateinputs";
-import {format, isWithinInterval, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-fns'
+import {format, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-fns'
 import uuid from 'react-uuid'
 import produce from "immer";
-import {DndProvider, useDrag} from 'react-dnd'
-import {HTML5Backend} from 'react-dnd-html5-backend'
+import { throttle } from "throttle-debounce";
 
 const Room = () => {
 
@@ -71,7 +70,7 @@ const Room = () => {
         const formatStartDate = format(values.start_time, time.format)
         const formatEndDate = format(values.end_time, time.format)
 
-        const overlappingArr = data.map((row, rowIndex) => {
+        const overlappingArr = data.map((row) => {
             return row.children.map(item => {
                 const date = new Date(null, null, null)
                 const parseItemStartDate = parse(item.startTime, time.format, date)
@@ -109,6 +108,80 @@ const Room = () => {
         setData(produce(state => {
             state[rowIndex].children[colIndex].isEditable = false
         }))
+    }
+
+    let itemLength = 1
+    let dragEndItem = {
+        index: -1,
+        rowIndex: null,
+        startTime: null,
+        endTime: null,
+    }
+
+    function dragOverHandler(e, rowIndex, colIndex) {
+        dragEndItem.rowIndex = rowIndex
+
+        const startTime = time.list[colIndex].split(" - ")[0]
+        const endTime = time.list[colIndex + itemLength - 1].split(" - ")[1]
+
+        dragEndItem.startTime = startTime
+        dragEndItem.endTime = endTime
+
+        const parseStartTime = parse(startTime, time.format, new Date(null))
+        const parseEndTime = parse(endTime, time.format, new Date(null))
+
+        const overlappingArr = data[rowIndex].children.map((item) => {
+            // return row.children.map(item => {
+                const date = new Date(null, null, null)
+                const parseItemStartDate = parse(item.startTime, time.format, date)
+                const parseItemEndDate = parse(item.endTime, time.format, date)
+
+                return areIntervalsOverlapping(
+                    {start: parseStartTime, end: parseEndTime},
+                    {start: parseItemStartDate, end: parseItemEndDate}
+                )
+            // })
+        })
+
+        dragEndItem.index = overlappingArr.findIndex(val => val !== true)
+    }
+
+    function dragEndHandler(e) {
+        console.log("dragEnd")
+
+        if (dragEndItem.index !== -1) {
+            const newItem = {
+                title: '',
+                startTime: dragEndItem.startTime,
+                endTime: dragEndItem.endTime,
+                isEditable: true
+            }
+            setData(produce((state) => {
+                state[dragEndItem.rowIndex].children.push(newItem)
+                state[dragEndItem.rowIndex].children.sort((prev, next) => {
+                    const date = new Date(null, null, null)
+                    return parse(prev.endTime, time.format, date) > parse(next.endTime, time.format, date) ? 1 : -1
+                })
+            }))
+        } else {
+            alert("Нет подходящих аудиторий, попробуйте изменить время")
+        }
+    }
+
+    function dragLeaveHandler(e) {
+
+    }
+
+    function dragStartHandler(e) {
+        itemLength = e.target.colSpan
+    }
+
+    function dropHandler(e) {
+        console.log("drop")
+    }
+
+    function dragEnterHandler(e) {
+        console.log("drag enter")
     }
 
     return (
@@ -164,13 +237,18 @@ const Room = () => {
                                         const colspan = getCountCols(col.startTime, col.endTime)
                                         countCols += offsetCols + colspan
 
-                                        const emptyCols = new Array(offsetCols).fill(null).map(() => <td key={uuid()}
-                                                                                                         className={styles.colTime}/>)
+                                        const emptyCols = new Array(offsetCols).fill(null).map(() => <td key={uuid()} />)
                                         return (
                                             <React.Fragment key={uuid()}>
                                                 {emptyCols}
                                                 {col.isEditable ?
                                                     <td colSpan={colspan}
+                                                        draggable="true"
+                                                        onDragLeave={(e) => dragLeaveHandler(e)}
+                                                        onDragStart={(e) => dragStartHandler(e)}
+                                                        onDragEnd={(e) => dragEndHandler(e)}
+                                                        onDragEnter={(e) => dragEnterHandler(e)}
+                                                        onDrop={(e) => dropHandler(e)}
                                                         className={styles.tableEditable}>{col.title}
                                                         <SaveOutlined onClick={onSave(rowIndex, colIndex)}
                                                                       className={styles.tableSave}/>
@@ -183,8 +261,8 @@ const Room = () => {
                                     }
                                 )}
                                 {/* пустые колонки после мероприятий */}
-                                {new Array(time.list.length - countCols).fill(null).map(() => <td key={uuid()}
-                                                                                                  className={styles.colTime}/>)}
+                                {new Array(time.list.length - countCols).fill(null).map((item, index) => (
+                                    <td onDragOver={throttle(500,(e) => dragOverHandler(e, rowIndex, countCols + index))} key={uuid()} />))}
                             </tr>
                         )
                     })}
