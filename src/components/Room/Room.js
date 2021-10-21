@@ -66,6 +66,10 @@ const Room = () => {
         return differenceInMinutes(parseEndTime, parseStartTime) / 60 * 2
     }
 
+    // let index;
+
+    const [index, setIndex] = useState();
+
     const onFinish = (values) => {
         const formatStartDate = format(values.start_time, time.format)
         const formatEndDate = format(values.end_time, time.format)
@@ -83,9 +87,9 @@ const Room = () => {
             })
         })
 
-        const index = overlappingArr.findIndex(arr => !arr.includes(true))
+        const localIndex = overlappingArr.findIndex(arr => !arr.includes(true))
 
-        if (index !== -1) {
+        if (localIndex !== -1) {
             const newItem = {
                 title: '',
                 startTime: formatStartDate,
@@ -93,12 +97,13 @@ const Room = () => {
                 isEditable: true
             }
             setData(produce((state) => {
-                state[index].children.push(newItem)
-                state[index].children.sort((prev, next) => {
+                state[localIndex].children.push(newItem)
+                state[localIndex].children.sort((prev, next) => {
                     const date = new Date(null, null, null)
                     return parse(prev.endTime, time.format, date) > parse(next.endTime, time.format, date) ? 1 : -1
                 })
             }))
+            setIndex(localIndex)
         } else {
             alert("Нет подходящих аудиторий, попробуйте изменить время")
         }
@@ -119,6 +124,9 @@ const Room = () => {
     }
 
     function dragOverHandler(e, rowIndex, colIndex) {
+        console.log("colIndex", colIndex)
+        // return
+
         dragEndItem.rowIndex = rowIndex
 
         const startTime = time.list[colIndex].split(" - ")[0]
@@ -144,10 +152,10 @@ const Room = () => {
         })
 
         dragEndItem.index = overlappingArr.findIndex(val => val !== true)
+        // console.log(dragEndItem.index)
     }
 
     function dragEndHandler(e) {
-        console.log("dragEnd")
 
         if (dragEndItem.index !== -1) {
             const newItem = {
@@ -157,31 +165,21 @@ const Room = () => {
                 isEditable: true
             }
             setData(produce((state) => {
+                state[index].children = state[index].children.filter(val => val.isEditable !== true)
                 state[dragEndItem.rowIndex].children.push(newItem)
                 state[dragEndItem.rowIndex].children.sort((prev, next) => {
                     const date = new Date(null, null, null)
                     return parse(prev.endTime, time.format, date) > parse(next.endTime, time.format, date) ? 1 : -1
                 })
             }))
+            setIndex(dragEndItem.rowIndex)
         } else {
             alert("Нет подходящих аудиторий, попробуйте изменить время")
         }
     }
 
-    function dragLeaveHandler(e) {
-
-    }
-
     function dragStartHandler(e) {
         itemLength = e.target.colSpan
-    }
-
-    function dropHandler(e) {
-        console.log("drop")
-    }
-
-    function dragEnterHandler(e) {
-        console.log("drag enter")
     }
 
     return (
@@ -237,18 +235,16 @@ const Room = () => {
                                         const colspan = getCountCols(col.startTime, col.endTime)
                                         countCols += offsetCols + colspan
 
-                                        const emptyCols = new Array(offsetCols).fill(null).map(() => <td key={uuid()} />)
+                                        const emptyCols = new Array(offsetCols).fill(null)
+                                            .map((item, index) => <td onDragOver={throttle(500,(e) => dragOverHandler(e, rowIndex, countCols - offsetCols - colspan + index))} key={uuid()} />)
                                         return (
                                             <React.Fragment key={uuid()}>
                                                 {emptyCols}
                                                 {col.isEditable ?
                                                     <td colSpan={colspan}
                                                         draggable="true"
-                                                        onDragLeave={(e) => dragLeaveHandler(e)}
                                                         onDragStart={(e) => dragStartHandler(e)}
                                                         onDragEnd={(e) => dragEndHandler(e)}
-                                                        onDragEnter={(e) => dragEnterHandler(e)}
-                                                        onDrop={(e) => dropHandler(e)}
                                                         className={styles.tableEditable}>{col.title}
                                                         <SaveOutlined onClick={onSave(rowIndex, colIndex)}
                                                                       className={styles.tableSave}/>
