@@ -44,23 +44,26 @@ export const roomSlice = createSlice({
         ]
     },
     reducers: {
-        addEvent: ({data, time}, {payload: {index, newItem, format}}) => {
-            data[index].children.push(newItem)
-            data[index].children.sort((prev, next) => {
+        addEvent: ({data, time}, {payload: {roomIndex, newItem, format}}) => {
+            data[roomIndex].children.push(newItem)
+
+            data[roomIndex].children.sort((prev, next) => {
                 const date = new Date(null, null, null)
                 return parse(prev.endTime, format, date) > parse(next.endTime, format, date) ? 1 : -1
             })
         },
-        moveEvent: ({data, time}, {payload: {index, dragItem, newItem, format}}) => {
-            data[index].children = data[index].children.filter(val => val.isEditable !== true)
-            data[dragItem.rowIndex].children.push(newItem)
-            data[dragItem.rowIndex].children.sort((prev, next) => {
+        moveEvent: ({data, time}, {payload: {roomIndex, dragItem, newItem, format}}) => {
+            data[roomIndex].children = data[roomIndex].children.filter(val => val.isEditable !== true)
+
+            data[dragItem.roomIndex].children.push(newItem)
+
+            data[dragItem.roomIndex].children.sort((prev, next) => {
                 const date = new Date(null, null, null)
                 return parse(prev.endTime, format, date) > parse(next.endTime, format, date) ? 1 : -1
             })
         },
-        disableEditableEvent: ({data}, {payload: {rowIndex, colIndex}}) => {
-            data[rowIndex].children[colIndex].isEditable = false
+        disableEditableEvent: ({data}, {payload: {roomIndex, activityIndex}}) => {
+            data[roomIndex].children[activityIndex].isEditable = false
         },
     }
 })

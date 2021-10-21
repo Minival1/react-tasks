@@ -51,6 +51,7 @@
 	color: #fff;
 	background: green;
 	z-index: 3333;
+	cursor: grab;
 }
 
 .tableSave {
