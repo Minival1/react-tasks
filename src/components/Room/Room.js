@@ -5,55 +5,20 @@ import styles from "./Room.module.css";
 import {TimePicker} from "@progress/kendo-react-dateinputs";
 import {format, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-fns'
 import uuid from 'react-uuid'
-import produce from "immer";
 import { throttle } from "throttle-debounce";
+import {useDispatch, useSelector} from "react-redux";
+import {addEvent, moveEvent, disableEditableEvent} from "../../store/slices/roomSlice"
 
 const Room = () => {
 
-    const [data, setData] = useState([
-        {
-            title: "Аудитория №1",
-            id: 1,
-            children: [
-                {
-                    title: 'Мероприятие №1 с 8:00 до 11:00',
-                    startTime: "8:00",
-                    endTime: "11:00",
-                    id: 1,
-                },
-                {
-                    title: 'Мероприятие №2 с 11:00 до 13:00',
-                    startTime: "11:00",
-                    endTime: "13:00",
-                    id: 2,
-                },
-            ]
-        },
-        {
-            title: "Аудитория №2",
-            id: 2,
-            children: [
-                {
-                    title: 'Мероприятие №1 с 8:00 до 10:30',
-                    startTime: "8:00",
-                    endTime: "10:30",
-                    id: 1,
-                },
-                {
-                    title: 'Мероприятие №2 с 11:00 до 13:00',
-                    startTime: "11:00",
-                    endTime: "13:00",
-                    id: 2,
-                },
-            ]
-        },
-    ])
+    const { data } = useSelector(state => state.room)
+    const dispatch = useDispatch()
 
     const time = {
         format: "HH:mm",
-        min: new Date(null, null, null, 8, 0),
-        max: new Date(null, null, null, 18, 0),
-        steps: {
+            min: new Date(null, null, null, 8, 0),
+            max: new Date(null, null, null, 18, 0),
+            steps: {
             minute: 30
         },
         list: ['8:00 - 8:30', '8:30 - 9:00', '9:00 - 9:30', '9:30 - 10:00', '10:00 - 10:30', '10:30 - 11:00', '11:00 - 11:30', '11:30 - 12:00', '12:00 - 12:30', '12:30 - 13:00', '13:00 - 13:30', '13:30 - 14:00', '14:00 - 14:30', '14:30 - 15:00', '15:00 - 15:30', '15:30 - 16:00', '16:00 - 16:30', '16:30 - 17:00', '17:00 - 17:30', '17:30 - 18:00']
@@ -65,8 +30,6 @@ const Room = () => {
 
         return differenceInMinutes(parseEndTime, parseStartTime) / 60 * 2
     }
-
-    // let index;
 
     const [index, setIndex] = useState();
 
@@ -96,13 +59,7 @@ const Room = () => {
                 endTime: formatEndDate,
                 isEditable: true
             }
-            setData(produce((state) => {
-                state[localIndex].children.push(newItem)
-                state[localIndex].children.sort((prev, next) => {
-                    const date = new Date(null, null, null)
-                    return parse(prev.endTime, time.format, date) > parse(next.endTime, time.format, date) ? 1 : -1
-                })
-            }))
+            dispatch(addEvent({index: localIndex, newItem, format: time.format}))
             setIndex(localIndex)
         } else {
             alert("Нет подходящих аудиторий, попробуйте изменить время")
@@ -110,13 +67,11 @@ const Room = () => {
     }
 
     const onSave = (rowIndex, colIndex) => () => {
-        setData(produce(state => {
-            state[rowIndex].children[colIndex].isEditable = false
-        }))
+        dispatch(disableEditableEvent({rowIndex, colIndex}))
     }
 
-    let itemLength = 1
-    let dragEndItem = {
+    let dragItem = {
+        itemLength: 1,
         index: -1,
         rowIndex: null,
         startTime: null,
@@ -124,22 +79,19 @@ const Room = () => {
     }
 
     function dragOverHandler(e, rowIndex, colIndex) {
-        console.log("colIndex", colIndex)
-        // return
 
-        dragEndItem.rowIndex = rowIndex
+        dragItem.rowIndex = rowIndex
 
         const startTime = time.list[colIndex].split(" - ")[0]
-        const endTime = time.list[colIndex + itemLength - 1].split(" - ")[1]
+        const endTime = time.list[colIndex + dragItem.itemLength - 1].split(" - ")[1]
 
-        dragEndItem.startTime = startTime
-        dragEndItem.endTime = endTime
+        dragItem.startTime = startTime
+        dragItem.endTime = endTime
 
         const parseStartTime = parse(startTime, time.format, new Date(null))
         const parseEndTime = parse(endTime, time.format, new Date(null))
 
         const overlappingArr = data[rowIndex].children.map((item) => {
-            // return row.children.map(item => {
                 const date = new Date(null, null, null)
                 const parseItemStartDate = parse(item.startTime, time.format, date)
                 const parseItemEndDate = parse(item.endTime, time.format, date)
@@ -148,38 +100,29 @@ const Room = () => {
                     {start: parseStartTime, end: parseEndTime},
                     {start: parseItemStartDate, end: parseItemEndDate}
                 )
-            // })
         })
 
-        dragEndItem.index = overlappingArr.findIndex(val => val !== true)
-        // console.log(dragEndItem.index)
+        dragItem.index = overlappingArr.findIndex(val => val !== true)
     }
 
     function dragEndHandler(e) {
 
-        if (dragEndItem.index !== -1) {
+        if (dragItem.index !== -1) {
             const newItem = {
                 title: '',
-                startTime: dragEndItem.startTime,
-                endTime: dragEndItem.endTime,
+                startTime: dragItem.startTime,
+                endTime: dragItem.endTime,
                 isEditable: true
             }
-            setData(produce((state) => {
-                state[index].children = state[index].children.filter(val => val.isEditable !== true)
-                state[dragEndItem.rowIndex].children.push(newItem)
-                state[dragEndItem.rowIndex].children.sort((prev, next) => {
-                    const date = new Date(null, null, null)
-                    return parse(prev.endTime, time.format, date) > parse(next.endTime, time.format, date) ? 1 : -1
-                })
-            }))
-            setIndex(dragEndItem.rowIndex)
+            dispatch(moveEvent({index, newItem, dragItem, format: time.format}))
+            setIndex(dragItem.rowIndex)
         } else {
             alert("Нет подходящих аудиторий, попробуйте изменить время")
         }
     }
 
     function dragStartHandler(e) {
-        itemLength = e.target.colSpan
+        dragItem.itemLength = e.target.colSpan
     }
 
     return (
