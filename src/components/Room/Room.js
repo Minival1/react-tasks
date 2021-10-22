@@ -155,6 +155,56 @@ const Room = () => {
         e.currentTarget.scrollLeft += e.deltaY * 0.4;
     }
 
+    function renderBodyTable() {
+        return data.map((room, roomIndex) => {
+            // количество колонок до последнего существующего мероприятия
+            let countCols = 0
+            return (
+                <tr key={uuid()}>
+                    <td className={styles.colTitle}>{room.title}</td>
+
+                    {room.children.map((activity, activityIndex, arrActivity) => {
+                            const prev = arrActivity[activityIndex - 1]
+                            // отступ по колонкам
+                            let offsetCols = 0
+
+                            if (prev) {
+                                offsetCols = getCountCols(prev.endTime, activity.startTime)
+                            }
+
+                            // сколько колонок займет блок
+                            const colspan = getCountCols(activity.startTime, activity.endTime)
+                            countCols += offsetCols + colspan
+
+                            const emptyCols = new Array(offsetCols).fill(null)
+                                .map((item, index) => <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex))} data-col={countCols - offsetCols - colspan + index} key={uuid()} />)
+                            return (
+                                <React.Fragment key={uuid()}>
+                                    {emptyCols}
+                                    {activity.isEditable ?
+                                        <td colSpan={colspan}
+                                            draggable="true"
+                                            onDragStart={(e) => dragStartHandler(e)}
+                                            onDragEnd={(e) => dragEndHandler(e)}
+                                            className={styles.tableEditable}>{activity.title}
+                                            <SaveOutlined onClick={onSave(roomIndex, activityIndex)}
+                                                          className={styles.tableSave}/>
+                                        </td> :
+                                        <td colSpan={colspan}
+                                            className={styles.tableTitle}>{activity.title}</td>
+                                    }
+                                </React.Fragment>
+                            )
+                        }
+                    )}
+                    {/* пустые колонки после мероприятий */}
+                    {new Array(time.list.length - countCols).fill(null).map((item, index) => (
+                        <td onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))} data-col={countCols + index} key={uuid()} />))}
+                </tr>
+            )
+        })
+    }
+
     return (
         <div>
             <Form form={form} initialValues={{
@@ -189,53 +239,7 @@ const Room = () => {
                     </tr>
                     </thead>
                     <tbody>
-                    {data.map((room, roomIndex) => {
-                        // количество колонок до последнего мероприятия
-                        let countCols = 0
-                        return (
-                            <tr key={uuid()}>
-                                <td className={styles.colTitle}>{room.title}</td>
-
-                                {room.children.map((activity, activityIndex, arrActivity) => {
-                                        const prev = arrActivity[activityIndex - 1]
-                                        // отступ по колонкам
-                                        let offsetCols = 0
-
-                                        if (prev) {
-                                            offsetCols = getCountCols(prev.endTime, activity.startTime)
-                                        }
-
-                                        // сколько колонок займет блок
-                                        const colspan = getCountCols(activity.startTime, activity.endTime)
-                                        countCols += offsetCols + colspan
-
-                                        const emptyCols = new Array(offsetCols).fill(null)
-                                            .map((item, index) => <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex))} data-col={countCols - offsetCols - colspan + index} key={uuid()} />)
-                                        return (
-                                            <React.Fragment key={uuid()}>
-                                                {emptyCols}
-                                                {activity.isEditable ?
-                                                    <td colSpan={colspan}
-                                                        draggable="true"
-                                                        onDragStart={(e) => dragStartHandler(e)}
-                                                        onDragEnd={(e) => dragEndHandler(e)}
-                                                        className={styles.tableEditable}>{activity.title}
-                                                        <SaveOutlined onClick={onSave(roomIndex, activityIndex)}
-                                                                      className={styles.tableSave}/>
-                                                    </td> :
-                                                    <td colSpan={colspan}
-                                                        className={styles.tableTitle}>{activity.title}</td>
-                                                }
-                                            </React.Fragment>
-                                        )
-                                    }
-                                )}
-                                {/* пустые колонки после мероприятий */}
-                                {new Array(time.list.length - countCols).fill(null).map((item, index) => (
-                                    <td onDragOver={throttle(200,(e) => dragOverHandler(e, roomIndex))} data-col={countCols + index} key={uuid()} />))}
-                            </tr>
-                        )
-                    })}
+                        {renderBodyTable()}
                     </tbody>
                 </table>
             </div>
