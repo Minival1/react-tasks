@@ -90,8 +90,9 @@ const Room = () => {
         endTime: null,
     }
 
-    function dragOverHandler(e, roomIndex, activityIndex) {
+    function dragOverHandler(e, roomIndex) {
 
+        const activityIndex = parseInt(e.target.dataset.col)
         dragItem.roomIndex = roomIndex
 
         const startTime = time.list[activityIndex].split(" - ")[0]
@@ -146,6 +147,10 @@ const Room = () => {
         dragItem.itemLength = e.target.colSpan
     }
 
+    function onWheel(e) {
+        e.currentTarget.scrollLeft += e.deltaY * 0.4;
+    }
+
     return (
         <div>
             <Form form={form} initialValues={{
@@ -171,7 +176,7 @@ const Room = () => {
                 </div>
             </Form>
 
-            <div className={styles.tableWrapper}>
+            <div onWheel={onWheel} className={styles.tableWrapper}>
                 <table className={styles.table}>
                     <thead>
                     <tr>
@@ -201,7 +206,7 @@ const Room = () => {
                                         countCols += offsetCols + colspan
 
                                         const emptyCols = new Array(offsetCols).fill(null)
-                                            .map((item, index) => <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex, countCols - offsetCols - colspan + index))} key={uuid()} />)
+                                            .map((item, index) => <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex))} data-col={countCols - offsetCols - colspan + index} key={uuid()} />)
                                         return (
                                             <React.Fragment key={uuid()}>
                                                 {emptyCols}
@@ -223,7 +228,7 @@ const Room = () => {
                                 )}
                                 {/* пустые колонки после мероприятий */}
                                 {new Array(time.list.length - countCols).fill(null).map((item, index) => (
-                                    <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex, countCols + index))} key={uuid()} />))}
+                                    <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex))} data-col={countCols + index} key={uuid()} />))}
                             </tr>
                         )
                     })}

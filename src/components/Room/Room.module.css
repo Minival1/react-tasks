@@ -23,7 +23,6 @@
 .table {
 	border: 1px solid #1890ff;
 	border-collapse: collapse;
-	width: 100%;
 	font-size: 16px;
 }
 
@@ -65,6 +64,15 @@
 	border: 1px solid #1890ff !important;
 	left: 0;
 	z-index: 3;
+}
+
+.colTitle:after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -1px;
+	height: 100%;
+	border-left: 1px solid #1890ff;
 }
 
 .colTime {
