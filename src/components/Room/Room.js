@@ -93,6 +93,7 @@ const Room = () => {
     function dragOverHandler(e, roomIndex) {
 
         const activityIndex = parseInt(e.target.dataset.col)
+
         dragItem.roomIndex = roomIndex
 
         const startTime = time.list[activityIndex].split(" - ")[0]
@@ -105,21 +106,24 @@ const Room = () => {
         dragItem.startTime = startTime
         dragItem.endTime = endTime
 
-        const parseStartTime = parse(startTime, time.format, new Date(null))
-        const parseEndTime = parse(endTime, time.format, new Date(null))
+        const date = new Date(null, null, null)
+        const parseStartTime = parse(startTime, time.format, date)
+        const parseEndTime = parse(endTime, time.format, date)
+
 
         const overlappingArr = data[roomIndex].children.map((item) => {
-                const date = new Date(null, null, null)
+            if (item.isEditable) {
+                return false
+            }
                 const parseItemStartDate = parse(item.startTime, time.format, date)
                 const parseItemEndDate = parse(item.endTime, time.format, date)
-
                 return areIntervalsOverlapping(
                     {start: parseStartTime, end: parseEndTime},
                     {start: parseItemStartDate, end: parseItemEndDate}
                 )
         })
 
-        dragItem.isOk = overlappingArr.some(val => val !== true)
+        dragItem.isOk = overlappingArr.every(val => val !== true)
     }
 
     function dragEndHandler(e) {
@@ -228,7 +232,7 @@ const Room = () => {
                                 )}
                                 {/* пустые колонки после мероприятий */}
                                 {new Array(time.list.length - countCols).fill(null).map((item, index) => (
-                                    <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex))} data-col={countCols + index} key={uuid()} />))}
+                                    <td onDragOver={throttle(200,(e) => dragOverHandler(e, roomIndex))} data-col={countCols + index} key={uuid()} />))}
                             </tr>
                         )
                     })}
