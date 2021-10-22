@@ -126,7 +126,7 @@ const Room = () => {
         dragItem.isOk = overlappingArr.every(val => val !== true)
     }
 
-    function dragEndHandler(e) {
+    function dragEndHandler() {
 
         if (dragItem.isOk) {
             const newItem = {
@@ -139,8 +139,8 @@ const Room = () => {
             setRoomIndex(dragItem.roomIndex)
 
             form.setFieldsValue({
-                ["start_time"]: parse(newItem.startTime, time.format, new Date(null, null, null)),
-                ["end_time"]: parse(newItem.endTime, time.format, new Date(null, null, null))
+                start_time: parse(newItem.startTime, time.format, new Date(null, null, null)),
+                end_time: parse(newItem.endTime, time.format, new Date(null, null, null))
             })
         } else {
             openNotification("Нет подходящих аудиторий, попробуйте изменить время")
@@ -184,8 +184,8 @@ const Room = () => {
                                     {activity.isEditable ?
                                         <td colSpan={colspan}
                                             draggable="true"
-                                            onDragStart={(e) => dragStartHandler(e)}
-                                            onDragEnd={(e) => dragEndHandler(e)}
+                                            onDragStart={dragStartHandler}
+                                            onDragEnd={dragEndHandler}
                                             className={styles.tableEditable}>{activity.title}
                                             <SaveOutlined onClick={onSave(roomIndex, activityIndex)}
                                                           className={styles.tableSave}/>
@@ -208,8 +208,8 @@ const Room = () => {
     return (
         <div>
             <Form form={form} initialValues={{
-                ["start_time"]: time.min,
-                ["end_time"]: time.max
+                start_time: time.min,
+                end_time: time.max
             }} name="time" onFinish={onFinish}>
                 <div className={styles.timepicker}>
                     <div>

@@ -4,7 +4,6 @@ import UserPage from "../pages/User-page";
 import AdminPage from "../pages/Admin-page";
 import LoginPage from "../pages/Login-page";
 import {routes} from "../data/routes"
-import {React, useEffect} from "react";
 import {useDispatch, useSelector} from "react-redux";
 import {login} from "../store/slices/authSlice"
 import PrivateRoute from "./PrivateRoute";
