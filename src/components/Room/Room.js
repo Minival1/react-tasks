@@ -1,5 +1,5 @@
 import React, {useState} from "react";
-import {Button, Form} from 'antd';
+import {Button, Form, notification} from 'antd';
 import {SaveOutlined} from '@ant-design/icons';
 import styles from "./Room.module.css";
 import {TimePicker} from "@progress/kendo-react-dateinputs";
@@ -14,6 +14,9 @@ const Room = () => {
     const { data } = useSelector(state => state.room)
     const dispatch = useDispatch()
 
+    const [roomIndex, setRoomIndex] = useState();
+    const [form] = Form.useForm()
+
     const time = {
         format: "HH:mm",
             min: new Date(null, null, null, 8, 0),
@@ -24,14 +27,20 @@ const Room = () => {
         list: ['8:00 - 8:30', '8:30 - 9:00', '9:00 - 9:30', '9:30 - 10:00', '10:00 - 10:30', '10:30 - 11:00', '11:00 - 11:30', '11:30 - 12:00', '12:00 - 12:30', '12:30 - 13:00', '13:00 - 13:30', '13:30 - 14:00', '14:00 - 14:30', '14:30 - 15:00', '15:00 - 15:30', '15:30 - 16:00', '16:00 - 16:30', '16:30 - 17:00', '17:00 - 17:30', '17:30 - 18:00']
     }
 
+    const openNotification = message => {
+        notification.info({
+            message: message,
+            description: "",
+            placement: "topLeft",
+        });
+    };
+
     const getCountCols = (startTime, endTime) => {
         const parseStartTime = parse(startTime, time.format, new Date(null))
         const parseEndTime = parse(endTime, time.format, new Date(null))
 
         return differenceInMinutes(parseEndTime, parseStartTime) / 60 * 2
     }
-
-    const [roomIndex, setRoomIndex] = useState();
 
     const onFinish = (values) => {
         const formatStartDate = format(values.start_time, time.format)
@@ -62,12 +71,15 @@ const Room = () => {
             dispatch(addEvent({roomIndex, newItem, format: time.format}))
             setRoomIndex(roomIndex)
         } else {
-            alert("Нет подходящих аудиторий, попробуйте изменить время")
+            openNotification("Нет подходящих аудиторий, попробуйте изменить время")
         }
     }
 
     const onSave = (roomIndex, activityIndex) => () => {
+        const item = data[roomIndex].children[activityIndex]
+
         dispatch(disableEditableEvent({roomIndex, activityIndex}))
+        openNotification(`Аудитория успешно забронирована с ${item.startTime} до ${item.endTime}`)
     }
 
     let dragItem = {
@@ -83,7 +95,11 @@ const Room = () => {
         dragItem.roomIndex = roomIndex
 
         const startTime = time.list[activityIndex].split(" - ")[0]
-        const endTime = time.list[activityIndex + dragItem.itemLength - 1].split(" - ")[1]
+        const endTime = time.list[activityIndex + dragItem.itemLength - 1]?.split(" - ")[1]
+
+        if (!endTime) {
+            return
+        }
 
         dragItem.startTime = startTime
         dragItem.endTime = endTime
@@ -102,7 +118,7 @@ const Room = () => {
                 )
         })
 
-        dragItem.isOk = overlappingArr.findIndex(val => val !== true) !== -1
+        dragItem.isOk = overlappingArr.some(val => val !== true)
     }
 
     function dragEndHandler(e) {
@@ -116,8 +132,13 @@ const Room = () => {
             }
             dispatch(moveEvent({roomIndex, newItem, dragItem, format: time.format}))
             setRoomIndex(dragItem.roomIndex)
+
+            form.setFieldsValue({
+                ["start_time"]: parse(newItem.startTime, time.format, new Date(null, null, null)),
+                ["end_time"]: parse(newItem.endTime, time.format, new Date(null, null, null))
+            })
         } else {
-            alert("Нет подходящих аудиторий, попробуйте изменить время")
+            openNotification("Нет подходящих аудиторий, попробуйте изменить время")
         }
     }
 
@@ -127,22 +148,22 @@ const Room = () => {
 
     return (
         <div>
-            <Form initialValues={{
+            <Form form={form} initialValues={{
                 ["start_time"]: time.min,
                 ["end_time"]: time.max
             }} name="time" onFinish={onFinish}>
                 <div className={styles.timepicker}>
                     <div>
                         <p>Начало мероприятия</p>
-                        <Form.Item name="start_time">
-                            <TimePicker placeholder="Select time" steps={time.steps} defaultValue={time.min}
+                        <Form.Item noStyle="true" name="start_time">
+                            <TimePicker placeholder="Select time" steps={time.steps}
                                         min={time.min} max={time.max} format={time.format}/>
                         </Form.Item>
                     </div>
                     <div>
                         <p>Окончание мероприятия</p>
-                        <Form.Item name="end_time">
-                            <TimePicker placeholder="Select time" steps={time.steps} defaultValue={time.max}
+                        <Form.Item noStyle="true" name="end_time">
+                            <TimePicker placeholder="Select time" steps={time.steps}
                                         min={time.min} max={time.max} format={time.format}/>
                         </Form.Item>
                     </div>
