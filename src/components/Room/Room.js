@@ -177,7 +177,7 @@ const Room = () => {
                             countCols += offsetCols + colspan
 
                             const emptyCols = new Array(offsetCols).fill(null)
-                                .map((item, index) => <td onDragOver={throttle(500,(e) => dragOverHandler(e, roomIndex))} data-col={countCols - offsetCols - colspan + index} key={uuid()} />)
+                                .map((item, index) => <td onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))} data-col={countCols - offsetCols - colspan + index} key={uuid()} />)
                             return (
                                 <React.Fragment key={uuid()}>
                                     {emptyCols}
