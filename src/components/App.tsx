@@ -4,7 +4,7 @@ import UserPage from "../pages/User-page";
 import AdminPage from "../pages/Admin-page";
 import LoginPage from "../pages/Login-page";
 import {routes} from "../data/routes"
-import {useDispatch, useSelector} from "react-redux";
+import {useSelector, useDispatch} from "react-redux";
 import {authSelector, login} from "../store/slices/authSlice"
 import PrivateRoute from "./PrivateRoute";
 import {ROLE} from "../data/roles"
@@ -12,12 +12,10 @@ import Header from "./Header";
 import {User} from "../interfaces/User";
 import "./App.css"
 
-
 const App = () => {
 
     const {isAuth} = useSelector(authSelector)
     const dispatch = useDispatch()
-
     const user: User = JSON.parse(localStorage.getItem("user")!)
 
     if (user && !isAuth) {
