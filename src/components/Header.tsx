@@ -5,6 +5,7 @@ import {LogoutOutlined} from '@ant-design/icons';
 import {logout} from "../store/slices/authSlice";
 import {useDispatch} from "react-redux";
 import uuid from 'react-uuid'
+import {User} from "../interfaces/User";
 
 const { Header } = Layout;
 
@@ -12,9 +13,9 @@ const HeaderComponent = () => {
 
     const dispatch = useDispatch()
 
-    const user = JSON.parse(localStorage.getItem("user"))
+    const user: User = JSON.parse(localStorage.getItem("user")!)
 
-    const renderPrivateLinks = () => {
+    const renderPrivateLinks = (): JSX.Element[] => {
 
         return Object.values(routes)
             .filter(route => route.roles?.includes(user?.role))
@@ -25,7 +26,7 @@ const HeaderComponent = () => {
             ))
     }
 
-    function logoutHandler() {
+    function logoutHandler(): void {
         dispatch(logout())
     }
 
@@ -33,7 +34,7 @@ const HeaderComponent = () => {
         <Header>
             <Menu theme="dark" mode="horizontal">
                 {renderPrivateLinks()}
-                {user && <Menu.Item danger="true" onClick={logoutHandler} icon={<LogoutOutlined />}>
+                {user && <Menu.Item danger={true} onClick={logoutHandler} icon={<LogoutOutlined />}>
                     Logout
                 </Menu.Item>}
             </Menu>

@@ -1,4 +1,4 @@
-import React, {useState} from "react";
+import React, {DragEventHandler, useState} from "react";
 import {Button, Form, notification} from 'antd';
 import {SaveOutlined} from '@ant-design/icons';
 import styles from "./Room.module.css";
@@ -7,27 +7,27 @@ import {format, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-
 import uuid from 'react-uuid'
 import { throttle } from "throttle-debounce";
 import {useDispatch, useSelector} from "react-redux";
-import {addEvent, moveEvent, disableEditableEvent} from "../../store/slices/roomSlice"
+import {addEvent, moveEvent, disableEditableEvent, roomSelector} from "../../store/slices/roomSlice"
 
 const Room = () => {
 
-    const { data } = useSelector(state => state.room)
+    const { data } = useSelector(roomSelector)
     const dispatch = useDispatch()
 
-    const [roomIndex, setRoomIndex] = useState();
+    const [roomIndex, setRoomIndex] = useState<number>(-1);
     const [form] = Form.useForm()
 
     const time = {
         format: "HH:mm",
-            min: new Date(null, null, null, 8, 0),
-            max: new Date(null, null, null, 18, 0),
+            min: new Date(0, 0, 0, 8, 0),
+            max: new Date(0, 0, 0, 18, 0),
             steps: {
             minute: 30
         },
         list: ['8:00 - 8:30', '8:30 - 9:00', '9:00 - 9:30', '9:30 - 10:00', '10:00 - 10:30', '10:30 - 11:00', '11:00 - 11:30', '11:30 - 12:00', '12:00 - 12:30', '12:30 - 13:00', '13:00 - 13:30', '13:30 - 14:00', '14:00 - 14:30', '14:30 - 15:00', '15:00 - 15:30', '15:30 - 16:00', '16:00 - 16:30', '16:30 - 17:00', '17:00 - 17:30', '17:30 - 18:00']
     }
 
-    const openNotification = message => {
+    const openNotification = (message: string): void => {
         notification.info({
             message: message,
             description: "",
@@ -35,20 +35,27 @@ const Room = () => {
         });
     };
 
-    const getCountCols = (startTime, endTime) => {
-        const parseStartTime = parse(startTime, time.format, new Date(null))
-        const parseEndTime = parse(endTime, time.format, new Date(null))
+    const getCountCols = (startTime: string, endTime: string): number => {
+        const date = new Date(0, 0, 0)
+
+        const parseStartTime = parse(startTime, time.format, date)
+        const parseEndTime = parse(endTime, time.format, date)
 
         return differenceInMinutes(parseEndTime, parseStartTime) / 60 * 2
     }
 
-    const onFinish = (values) => {
+    interface onFinishTypes {
+        start_time: Date,
+        end_time: Date
+    }
+
+    const onFinish = (values: onFinishTypes): void => {
         const formatStartDate = format(values.start_time, time.format)
         const formatEndDate = format(values.end_time, time.format)
 
-        const overlappingArr = data.map((row) => {
+        const overlappingArr: boolean[][] = data.map((row) => {
             return row.children.map(item => {
-                const date = new Date(null, null, null)
+                const date = new Date(0, 0, 0)
                 const parseItemStartDate = parse(item.startTime, time.format, date)
                 const parseItemEndDate = parse(item.endTime, time.format, date)
 
@@ -66,7 +73,8 @@ const Room = () => {
                 title: '',
                 startTime: formatStartDate,
                 endTime: formatEndDate,
-                isEditable: true
+                isEditable: true,
+                id: uuid()
             }
             dispatch(addEvent({roomIndex, newItem, format: time.format}))
             setRoomIndex(roomIndex)
@@ -75,7 +83,7 @@ const Room = () => {
         }
     }
 
-    const onSave = (roomIndex, activityIndex) => () => {
+    const onSave = (roomIndex: number, activityIndex: number) => () => {
         const item = data[roomIndex].children[activityIndex]
 
         dispatch(disableEditableEvent({roomIndex, activityIndex}))
@@ -83,14 +91,14 @@ const Room = () => {
     }
 
     let dragItem = {
-        itemLength: 1,
+        itemLength: -1,
         isOk: false,
-        roomIndex: null,
-        startTime: null,
-        endTime: null,
+        roomIndex: -1,
+        startTime: "",
+        endTime: "",
     }
 
-    function dragOverHandler(e, roomIndex) {
+    function dragOverHandler(e: any, roomIndex: number): void {
 
         const activityIndex = parseInt(e.target.dataset.col)
 
@@ -106,7 +114,7 @@ const Room = () => {
         dragItem.startTime = startTime
         dragItem.endTime = endTime
 
-        const date = new Date(null, null, null)
+        const date = new Date(0, 0, 0)
         const parseStartTime = parse(startTime, time.format, date)
         const parseEndTime = parse(endTime, time.format, date)
 
@@ -126,36 +134,39 @@ const Room = () => {
         dragItem.isOk = overlappingArr.every(val => val !== true)
     }
 
-    function dragEndHandler() {
+    function dragEndHandler(): void {
 
         if (dragItem.isOk) {
             const newItem = {
                 title: '',
                 startTime: dragItem.startTime,
                 endTime: dragItem.endTime,
-                isEditable: true
+                isEditable: true,
+                id: uuid()
             }
             dispatch(moveEvent({roomIndex, newItem, dragItem, format: time.format}))
             setRoomIndex(dragItem.roomIndex)
 
+            const date = new Date(0, 0, 0)
+
             form.setFieldsValue({
-                start_time: parse(newItem.startTime, time.format, new Date(null, null, null)),
-                end_time: parse(newItem.endTime, time.format, new Date(null, null, null))
+                start_time: parse(newItem.startTime, time.format, date),
+                end_time: parse(newItem.endTime, time.format, date)
             })
         } else {
             openNotification("Нет подходящих аудиторий, попробуйте изменить время")
         }
     }
 
-    function dragStartHandler(e) {
+    function dragStartHandler(e: any): void {
         dragItem.itemLength = e.target.colSpan
     }
 
-    function onWheel(e) {
+    function onWheel(e: any): void {
         e.currentTarget.scrollLeft += e.deltaY * 0.4;
     }
 
-    function renderBodyTable() {
+    function renderBodyTable(): JSX.Element[] {
         return data.map((room, roomIndex) => {
             // количество колонок до последнего существующего мероприятия
             let countCols = 0
@@ -214,14 +225,14 @@ const Room = () => {
                 <div className={styles.timepicker}>
                     <div>
                         <p>Начало мероприятия</p>
-                        <Form.Item noStyle="true" name="start_time">
+                        <Form.Item noStyle={true} name="start_time">
                             <TimePicker placeholder="Select time" steps={time.steps}
                                         min={time.min} max={time.max} format={time.format}/>
                         </Form.Item>
                     </div>
                     <div>
                         <p>Окончание мероприятия</p>
-                        <Form.Item noStyle="true" name="end_time">
+                        <Form.Item noStyle={true} name="end_time">
                             <TimePicker placeholder="Select time" steps={time.steps}
                                         min={time.min} max={time.max} format={time.format}/>
                         </Form.Item>

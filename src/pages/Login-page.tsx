@@ -3,12 +3,17 @@ import { useHistory } from "react-router-dom";
 import {useDispatch} from "react-redux";
 import {login} from "../store/slices/authSlice";
 
+interface onFinishTypes {
+    login: string,
+    password: string
+}
+
 const LoginPage = () => {
 
-    const history = useHistory()
+    const history: any = useHistory()
     const dispatch = useDispatch()
 
-    const onFinish = (values) => {
+    const onFinish = (values: onFinishTypes) => {
         fetch("data/users.json").then(res => res.json())
             .then((res) => {
                 if (res[values.login]) {

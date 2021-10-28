@@ -1,5 +1,70 @@
-import {createSlice} from '@reduxjs/toolkit'
+import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {parse} from "date-fns";
+import {RootState} from '../store'
+
+interface RoomPayload {
+    roomIndex: number
+    activityIndex: number
+    newItem: {
+        title: string
+        startTime: string
+        endTime: string
+        id: any
+        isEditable: boolean
+    },
+    format: string
+    dragItem: {
+        roomIndex: number
+    }
+}
+
+interface NewItem {
+    newItem: {
+        title: string
+        startTime: string
+        endTime: string
+        id: any
+        isEditable: boolean
+    }
+}
+
+interface DragItem {
+    dragItem: {
+        roomIndex: number
+    }
+}
+
+interface AddEventPayload {
+    roomIndex: number
+    newItem: {
+        title: string
+        startTime: string
+        endTime: string
+        id: any
+        isEditable: boolean
+    }
+    format: string
+}
+
+interface MoveEventPayload {
+    roomIndex: number
+    newItem: {
+        title: string
+        startTime: string
+        endTime: string
+        id: any
+        isEditable: boolean
+    }
+    dragItem: {
+        roomIndex: number
+    }
+    format: string
+}
+
+interface DisableEditableEventPayload {
+    roomIndex: number
+    activityIndex: number
+}
 
 export const roomSlice = createSlice({
     name: 'room',
@@ -14,12 +79,14 @@ export const roomSlice = createSlice({
                         startTime: "8:00",
                         endTime: "11:00",
                         id: 1,
+                        isEditable: false
                     },
                     {
                         title: 'Мероприятие №2 с 11:00 до 13:00',
                         startTime: "11:00",
                         endTime: "13:00",
                         id: 2,
+                        isEditable: false
                     },
                 ]
             },
@@ -32,37 +99,45 @@ export const roomSlice = createSlice({
                         startTime: "8:00",
                         endTime: "10:30",
                         id: 1,
+                        isEditable: false
                     },
                     {
                         title: 'Мероприятие №2 с 11:00 до 13:00',
                         startTime: "11:00",
                         endTime: "13:00",
                         id: 2,
+                        isEditable: false
                     },
                 ]
             },
         ]
     },
     reducers: {
-        addEvent: ({data, time}, {payload: {roomIndex, newItem, format}}) => {
+        addEvent: ({data}, {payload}: PayloadAction<AddEventPayload>) => {
+            const {roomIndex, newItem, format} = payload
+
             data[roomIndex].children.push(newItem)
 
             data[roomIndex].children.sort((prev, next) => {
-                const date = new Date(null, null, null)
+                const date = new Date(0, 0, 0)
                 return parse(prev.endTime, format, date) > parse(next.endTime, format, date) ? 1 : -1
             })
         },
-        moveEvent: ({data, time}, {payload: {roomIndex, dragItem, newItem, format}}) => {
+        moveEvent: ({data}, {payload}: PayloadAction<MoveEventPayload>) => {
+            const {roomIndex, dragItem, newItem, format} = payload
+
             data[roomIndex].children = data[roomIndex].children.filter(val => val.isEditable !== true)
 
             data[dragItem.roomIndex].children.push(newItem)
 
             data[dragItem.roomIndex].children.sort((prev, next) => {
-                const date = new Date(null, null, null)
+                const date = new Date(0, 0, 0)
                 return parse(prev.endTime, format, date) > parse(next.endTime, format, date) ? 1 : -1
             })
         },
-        disableEditableEvent: ({data}, {payload: {roomIndex, activityIndex}}) => {
+        disableEditableEvent: ({data}, {payload}: PayloadAction<DisableEditableEventPayload>) => {
+            const {roomIndex, activityIndex} = payload
+
             data[roomIndex].children[activityIndex].isEditable = false
         },
     }
@@ -70,5 +145,5 @@ export const roomSlice = createSlice({
 
 // Action creators are generated for each case reducer function
 export const {addEvent, moveEvent, disableEditableEvent} = roomSlice.actions
-
+export const roomSelector = (state: RootState) => state.room
 export default roomSlice.reducer
