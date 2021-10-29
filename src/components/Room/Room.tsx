@@ -83,7 +83,7 @@ const Room = () => {
         }
     }
 
-    const onSave = (roomIndex: number, activityIndex: number) => () => {
+    const onSave = (roomIndex: number, activityIndex: number) => (): void => {
         const item = data[roomIndex].children[activityIndex]
 
         dispatch(disableEditableEvent({roomIndex, activityIndex}))
@@ -91,7 +91,7 @@ const Room = () => {
     }
 
     let dragItem = {
-        itemLength: -1,
+        itemLength: 0,
         isOk: false,
         roomIndex: -1,
         startTime: "",
@@ -188,7 +188,11 @@ const Room = () => {
                             countCols += offsetCols + colspan
 
                             const emptyCols = new Array(offsetCols).fill(null)
-                                .map((item, index) => <td onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))} data-col={countCols - offsetCols - colspan + index} key={uuid()} />)
+                                .map((item, index) => <td
+                                    onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))}
+                                    data-col={countCols - offsetCols - colspan + index}
+                                    key={uuid()} />)
+
                             return (
                                 <React.Fragment key={uuid()}>
                                     {emptyCols}
@@ -209,8 +213,11 @@ const Room = () => {
                         }
                     )}
                     {/* пустые колонки после мероприятий */}
-                    {new Array(time.list.length - countCols).fill(null).map((item, index) => (
-                        <td onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))} data-col={countCols + index} key={uuid()} />))}
+                    {new Array(time.list.length - countCols).fill(null)
+                        .map((item, index) => <td
+                            onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))}
+                            data-col={countCols + index}
+                            key={uuid()} />)}
                 </tr>
             )
         })
