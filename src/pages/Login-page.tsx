@@ -1,7 +1,7 @@
 import {Form, Input, Button} from 'antd';
 import { useHistory } from "react-router-dom";
 import {useDispatch} from "react-redux";
-import {login} from "../store/slices/authSlice";
+import auth from "../store/Auth";
 
 interface onFinishTypes {
     login: string,
@@ -11,7 +11,6 @@ interface onFinishTypes {
 const LoginPage = () => {
 
     const history: any = useHistory()
-    const dispatch = useDispatch()
 
     const onFinish = (values: onFinishTypes) => {
         fetch("data/users.json").then(res => res.json())
@@ -25,7 +24,7 @@ const LoginPage = () => {
                             login: user.login,
                             role: user.role
                         }
-                        dispatch(login(obj))
+                        auth.login(obj)
                         history.goBack()
                     }
                 }

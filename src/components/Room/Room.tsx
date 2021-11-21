@@ -6,13 +6,10 @@ import {TimePicker} from "@progress/kendo-react-dateinputs";
 import {format, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-fns'
 import uuid from 'react-uuid'
 import { throttle } from "throttle-debounce";
-import {useDispatch, useSelector} from "react-redux";
-import {addEvent, moveEvent, disableEditableEvent, roomSelector} from "../../store/slices/roomSlice"
+import room from "../../store/Room"
+import { observer } from "mobx-react-lite";
 
 const Room = () => {
-
-    const { data } = useSelector(roomSelector)
-    const dispatch = useDispatch()
 
     const [roomIndex, setRoomIndex] = useState<number>(-1);
     const [form] = Form.useForm()
@@ -53,7 +50,7 @@ const Room = () => {
         const formatStartDate = format(values.start_time, time.format)
         const formatEndDate = format(values.end_time, time.format)
 
-        const overlappingArr: boolean[][] = data.map((row) => {
+        const overlappingArr = room.data.map((row) => {
             return row.children.map(item => {
                 const date = new Date(0, 0, 0)
                 const parseItemStartDate = parse(item.startTime, time.format, date)
@@ -76,18 +73,17 @@ const Room = () => {
                 isEditable: true,
                 id: uuid()
             }
-            dispatch(addEvent({roomIndex, newItem, format: time.format}))
+            room.addEvent({roomIndex, newItem, format: time.format})
             setRoomIndex(roomIndex)
         } else {
             openNotification("Нет подходящих аудиторий, попробуйте изменить время")
         }
     }
 
-    const onSave = (roomIndex: number, activityIndex: number) => (): void => {
-        const item = data[roomIndex].children[activityIndex]
+    const onSave = (activity: any) => (): void => {
 
-        dispatch(disableEditableEvent({roomIndex, activityIndex}))
-        openNotification(`Аудитория успешно забронирована с ${item.startTime} до ${item.endTime}`)
+        room.disableEditableEvent(activity)
+        openNotification(`Аудитория успешно забронирована с ${activity.startTime} до ${activity.endTime}`)
     }
 
     let dragItem = {
@@ -119,7 +115,7 @@ const Room = () => {
         const parseEndTime = parse(endTime, time.format, date)
 
 
-        const overlappingArr = data[roomIndex].children.map((item) => {
+        const overlappingArr = room.data[roomIndex].children.map((item) => {
             if (item.isEditable) {
                 return false
             }
@@ -144,7 +140,7 @@ const Room = () => {
                 isEditable: true,
                 id: uuid()
             }
-            dispatch(moveEvent({roomIndex, newItem, dragItem, format: time.format}))
+            room.moveEvent({roomIndex, newItem, dragItem, format: time.format})
             setRoomIndex(dragItem.roomIndex)
 
             const date = new Date(0, 0, 0)
@@ -167,7 +163,7 @@ const Room = () => {
     }
 
     function renderBodyTable(): JSX.Element[] {
-        return data.map((room, roomIndex) => {
+        return room.data.map((room, roomIndex) => {
             // количество колонок до последнего существующего мероприятия
             let countCols = 0
             return (
@@ -202,7 +198,7 @@ const Room = () => {
                                             onDragStart={dragStartHandler}
                                             onDragEnd={dragEndHandler}
                                             className={styles.tableEditable}>{activity.title}
-                                            <SaveOutlined onClick={onSave(roomIndex, activityIndex)}
+                                            <SaveOutlined onClick={onSave(activity)}
                                                           className={styles.tableSave}/>
                                         </td> :
                                         <td colSpan={colspan}
@@ -265,4 +261,4 @@ const Room = () => {
     )
 }
 
-export default Room
+export default observer(Room)
