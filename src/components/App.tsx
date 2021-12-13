@@ -34,6 +34,7 @@ const App = () => {
                                       requiredRoles={[ROLE.admin]}/>
                         <PrivateRoute path={routes["user-page"].url} component={UserPage} requiredRoles={[ROLE.user]}/>
                         <Route path={routes["login-page"].url} component={LoginPage}/>
+                        <Route path="/" component={LoginPage}/>
                     </Switch>
                 </div>
             </div>

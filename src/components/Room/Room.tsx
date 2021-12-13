@@ -1,4 +1,4 @@
-import React, {DragEventHandler, useState} from "react";
+import React, {useState} from "react";
 import {Button, Form, notification} from 'antd';
 import {SaveOutlined} from '@ant-design/icons';
 import styles from "./Room.module.css";
