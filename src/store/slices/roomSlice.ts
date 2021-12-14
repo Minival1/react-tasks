@@ -40,18 +40,18 @@ export const roomSlice = createSlice({
     initialState: {
         data: [
             {
-                title: "Аудитория №1",
+                title: "Уорхол",
                 id: 1,
                 children: [
                     {
-                        title: 'Мероприятие №1 с 8:00 до 11:00',
+                        title: 'Мероприятие №1',
                         startTime: "8:00",
                         endTime: "11:00",
                         id: 1,
                         isEditable: false
                     },
                     {
-                        title: 'Мероприятие №2 с 11:00 до 13:00',
+                        title: 'Мероприятие №2',
                         startTime: "11:00",
                         endTime: "13:00",
                         id: 2,
@@ -64,15 +64,15 @@ export const roomSlice = createSlice({
                 id: 2,
                 children: [
                     {
-                        title: 'Мероприятие №1 с 8:00 до 10:30',
+                        title: 'Мероприятие №1',
                         startTime: "8:00",
                         endTime: "10:30",
                         id: 1,
                         isEditable: false
                     },
                     {
-                        title: 'Мероприятие №2 с 11:00 до 13:00',
-                        startTime: "11:00",
+                        title: 'Мероприятие №2',
+                        startTime: "11:30",
                         endTime: "13:00",
                         id: 2,
                         isEditable: false

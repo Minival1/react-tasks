@@ -1,0 +1,167 @@
+.timeWrapper {
+	display: flex;
+}
+
+.timepicker {
+	display: flex;
+	align-items: flex-end;
+	margin-bottom: 40px;
+}
+
+.timepicker > * + *{
+	margin-left: 30px;
+}
+
+.table {
+	border: 1px solid #1890ff;
+	border-collapse: collapse;
+	font-size: 16px;
+}
+
+.table tr, .table td {
+	border: 1px solid #1890ff;
+	padding: 15px 20px;
+}
+
+.tableTitle {
+	font-weight: bold;
+	text-align: center;
+	font-size: 18px;
+	color: #fff;
+	background: #a53838;
+}
+
+.tableEditable {
+	font-weight: bold;
+	text-align: center;
+	font-size: 18px;
+	color: #fff;
+	background: green;
+	z-index: 3333;
+	cursor: grab;
+}
+
+.tableSave {
+	cursor: pointer;
+}
+
+.colTitle {
+	min-width: 300px;
+	position: sticky;
+	background: #fff;
+	border: 1px solid #1890ff !important;
+	left: 0;
+	z-index: 3;
+}
+
+.colTitle:after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -1px;
+	height: 100%;
+	border-left: 1px solid #1890ff;
+}
+
+.colTime {
+	min-width: 140px;
+	text-align: center;
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: auto;
+	grid-gap: 1px;
+}
+
+.row {
+	display: grid;
+	grid-template-columns: 250px repeat(auto-fit, minmax(40px, 1fr));
+	grid-gap: 1px;
+}
+
+.cellHead {
+	flex-direction: column;
+}
+
+.cell {
+	height: 80px;
+	box-shadow: 0 0 0 1px blue;
+	justify-content: center;
+	padding: 8px;
+	font-weight: bold;
+	font-size: 24px;
+	display: flex;
+}
+
+.cell > div {
+	width: 50%;
+	height: 100%;
+	position: relative;
+}
+
+.time {
+	color: #878282;
+	font-weight: 500;
+	padding-bottom: 16px;
+	font-size: 12px;
+	text-align: center;
+}
+
+.place {
+	color: #5d81c4;
+	font-size: 14px;
+	display: block;
+}
+
+.headTitle {
+	color: #878282;
+	padding-bottom: 8px;
+	display: flex;
+	align-items: flex-end;
+}
+
+.broned {
+	position: absolute;
+	left: 0;
+	top: 0;
+	height: 100%;
+	padding: 8px 24px 8px 8px;
+	line-height: 1.4;
+	background: #dbdbdb;
+	font-size: 12px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	z-index: 1;
+	border-radius: 6px;
+
+	&:before {
+		content: "";
+		position: absolute;
+		right: 0;
+		top: 0;
+		border-radius: 0 6px 6px 0;
+		height: 100%;
+		width: 14px;
+		background: #000000;
+	}
+}
+
+.editable {
+	background: #c7ebf3;
+
+	&:before {
+		background: #10b5d8;
+	}
+}
+
+.save {
+	margin: 0 0 auto auto;
+}
+
+.save svg {
+	width: 22px;
+	height: 22px;
+	fill: #10b5d8;
+}
