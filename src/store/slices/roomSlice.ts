@@ -1,15 +1,10 @@
 import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {parse} from "date-fns";
 import {RootState} from '../store'
+import {ActivityItem} from "../../interfaces/Activity";
 
-interface ActivityItem {
-    newItem: {
-        title: string
-        startTime: string
-        endTime: string
-        id: number
-        isEditable: boolean
-    }
+interface NewActivityItem {
+    newItem: ActivityItem
 }
 
 interface DragItem {
@@ -31,8 +26,8 @@ interface Time {
 }
 
 
-type AddEventPayload = Room & ActivityItem & Time
-type MoveEventPayload = Room & ActivityItem & DragItem & Time
+type AddEventPayload = Room & NewActivityItem & Time
+type MoveEventPayload = Room & NewActivityItem & DragItem & Time
 type DisableEditableEventPayload = Room & ActivityIndex
 
 export const roomSlice = createSlice({
@@ -66,14 +61,14 @@ export const roomSlice = createSlice({
                     {
                         title: 'Мероприятие №1',
                         startTime: "8:00",
-                        endTime: "10:30",
+                        endTime: "9:30",
                         id: 1,
                         isEditable: false
                     },
                     {
                         title: 'Мероприятие №2',
-                        startTime: "11:30",
-                        endTime: "13:00",
+                        startTime: "12:30",
+                        endTime: "14:00",
                         id: 2,
                         isEditable: false
                     },

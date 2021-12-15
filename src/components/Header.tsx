@@ -1,4 +1,4 @@
-import {Link, useHistory, useLocation} from "react-router-dom";
+import {Link, useLocation} from "react-router-dom";
 import {routes} from "../data/routes"
 import { Layout, Menu } from 'antd';
 import {LogoutOutlined} from '@ant-design/icons';
@@ -12,7 +12,6 @@ const { Header } = Layout;
 const HeaderComponent = () => {
 
     const location = useLocation()
-    const history = useHistory()
     const dispatch = useDispatch()
 
     const [selectedKey, setSelectedKeys] = useState(findCurrentMenu)

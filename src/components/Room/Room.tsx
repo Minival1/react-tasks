@@ -1,14 +1,15 @@
-import React, {RefObject, useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Button, Form, notification} from 'antd';
 import {SaveOutlined} from '@ant-design/icons';
 import styles from "./Room.module.scss";
 import {TimePicker} from "@progress/kendo-react-dateinputs";
-import {format, parse, differenceInMinutes, areIntervalsOverlapping} from 'date-fns'
+import {format, parse, differenceInMinutes, areIntervalsOverlapping, addMinutes} from 'date-fns'
 import uuid from 'react-uuid'
 import classNames from "classnames";
 import { throttle } from "throttle-debounce";
 import {useDispatch, useSelector} from "react-redux";
 import {addEvent, moveEvent, disableEditableEvent, roomSelector} from "../../store/slices/roomSlice"
+import {ActivityItem} from "../../interfaces/Activity";
 
 const Room = () => {
 
@@ -19,10 +20,18 @@ const Room = () => {
     const [form] = Form.useForm()
     const colRef = useRef<any>(null)
     const activityItems = useRef<any>([])
+    const timepickers = useRef<any>([])
 
     useEffect(() => {
+        console.log(activityItems)
+        timepickers.current.forEach((picker: any) => {
+            if (picker !== null) {
+                picker.element.querySelector("input").setAttribute("readonly", true)
+            }
+        })
         setTimeout(() => {
             setWidthActivities()
+
             window.addEventListener("resize", setWidthActivities)
         }, 0)
 
@@ -36,7 +45,8 @@ const Room = () => {
             if (el !== null) {
                 const {startTime, endTime} = el.dataset
                 const columns = getCountCols(startTime, endTime)
-                el.style.width = ((colRef.current.clientWidth * columns) / 2) - 16 + "px"
+                const offset = columns % 2 === 0 ? 16 : 8
+                el.style.width =((colRef.current.clientWidth * columns) / 2) - offset + "px"
             }
         })
     }
@@ -168,38 +178,40 @@ const Room = () => {
             return
         }
 
-        console.log(roomIndex)
+        const date = new Date(0,0,0)
 
         const activityIndex: string = e.target.dataset.col
         dragItem.roomIndex = roomIndex
 
-        // const startTime = time.list[activityIndex].split(" - ")[0]
-        // const endTime = time.list[activityIndex + dragItem.itemLength - 1]?.split(" - ")[1]
         const startTime = activityIndex.split(" - ")[0]
-        const endTime = activityIndex.split(" - ")[1]
+        const endTime = updateEndTimeItem(activityIndex.split(" - ")[0], dragItem.itemLength)
 
-        if (!endTime) {
+        const maxDate = time.list[time.list.length - 1].steps[1].split(" - ")[1]
+
+        const parsedEndTimeItem = parse(endTime, time.format, date)
+        const parsedMaxDate = parse(maxDate, time.format, date)
+        const isTimeGreaterThenMax = new Date(parsedMaxDate).getTime() < new Date(parsedEndTimeItem).getTime()
+
+        if (!endTime || isTimeGreaterThenMax) {
             return
         }
 
         dragItem.startTime = startTime
         dragItem.endTime = endTime
 
-        const date = new Date(0, 0, 0)
         const parseStartTime = parse(startTime, time.format, date)
         const parseEndTime = parse(endTime, time.format, date)
-
 
         const overlappingArr = data[roomIndex].children.map((item) => {
             if (item.isEditable) {
                 return false
             }
-                const parseItemStartDate = parse(item.startTime, time.format, date)
-                const parseItemEndDate = parse(item.endTime, time.format, date)
-                return areIntervalsOverlapping(
-                    {start: parseStartTime, end: parseEndTime},
-                    {start: parseItemStartDate, end: parseItemEndDate}
-                )
+            const parseItemStartDate = parse(item.startTime, time.format, date)
+            const parseItemEndDate = parse(item.endTime, time.format, date)
+            return areIntervalsOverlapping(
+                {start: parseStartTime, end: parseEndTime},
+                {start: parseItemStartDate, end: parseItemEndDate}
+            )
         })
 
         dragItem.isOk = overlappingArr.every(val => val !== true)
@@ -229,75 +241,52 @@ const Room = () => {
         }
     }
 
+    function updateEndTimeItem(oldTime: string, length: number) {
+        const step = 30
+        const date = new Date(0, 0, 0)
+        const parsed = parse(oldTime, time.format, date)
+        const added = addMinutes(parsed, length * step)
+        return format(added, time.format)
+    }
+
     function dragStartHandler(e: any): void {
         const {startTime, endTime} = e.target.dataset
+        if (!startTime || !endTime) {
+            return
+        }
         dragItem.itemLength = getCountCols(startTime, endTime)
     }
 
-    function renderBodyTable(): JSX.Element[] {
-        return data.map((room, roomIndex) => {
-            // количество колонок до последнего существующего мероприятия
-            let countCols = 0
-            return (
-                <tr key={uuid()}>
-                    <td className={styles.colTitle}>{room.title}</td>
+    function renderActivity(activity: ActivityItem, activityIndex: number, colStartTime: string, indexForRef: number): JSX.Element {
+        const dragOptions = {draggable: true, onDragStart: dragStartHandler, onDragEnd: dragEndHandler}
+        const draggable = activity.isEditable ? dragOptions : null
 
-                    {room.children.map((activity, activityIndex, arrActivity) => {
-                            const prev = arrActivity[activityIndex - 1]
-                            // отступ по колонкам
-                            let offsetCols = 0
-
-                            if (prev) {
-                                offsetCols = getCountCols(prev.endTime, activity.startTime)
-                            }
-
-                            // сколько колонок займет блок
-                            const colspan = getCountCols(activity.startTime, activity.endTime)
-                            countCols += offsetCols + colspan
-
-                            const emptyCols = new Array(offsetCols).fill(null)
-                                .map((item, index) => <td
-                                    onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))}
-                                    data-col={countCols - offsetCols - colspan + index}
-                                    key={uuid()} />)
-
-                            return (
-                                <React.Fragment key={uuid()}>
-                                    {emptyCols}
-                                    {activity.isEditable ?
-                                        <td colSpan={colspan}
-                                            draggable="true"
-                                            onDragStart={dragStartHandler}
-                                            onDragEnd={dragEndHandler}
-                                            className={styles.tableEditable}>{activity.title}
-                                            <SaveOutlined onClick={onSave(roomIndex, activityIndex)}
-                                                          className={styles.tableSave}/>
-                                        </td> :
-                                        <td colSpan={colspan}
-                                            className={styles.tableTitle}>{activity.title}</td>
-                                    }
-                                </React.Fragment>
-                            )
-                        }
-                    )}
-                    {/* пустые колонки после мероприятий */}
-                    {new Array(time.list.length - countCols).fill(null)
-                        .map((item, index) => <td
-                            onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))}
-                            data-col={countCols + index}
-                            key={uuid()} />)}
-                </tr>
-            )
-        })
+        return (
+            <div {...draggable}
+                 ref={(el) => activityItems.current[indexForRef] = el}
+                 data-start-time={colStartTime}
+                 data-end-time={activity.endTime}
+                 className={classNames(styles.broned, {
+                     [styles.editable]: activity.isEditable
+                 })}>
+                <div>{activity.startTime} - {activity.endTime}</div>
+                <div>{activity.title}</div>
+                {activity.isEditable && (
+                    <SaveOutlined
+                        onClick={onSave(roomIndex, activityIndex)}
+                        className={styles.save}/>
+                )}
+            </div>
+        )
     }
 
     function renderGrid(): JSX.Element[] {
-        return data.map((room) => {
+        let indexForRef = 0
+        return data.map((room, roomIndex) => {
             return (
                 <div key={uuid()} className={styles.row}>
                     <div className={classNames(styles.cell, styles.cellHead)}>
                         {room.title}
-                        <span className={styles.place}>20 мест</span>
                     </div>
 
                     {time.list.map((time) => {
@@ -309,48 +298,14 @@ const Room = () => {
                             const leftColStartTime = time.steps[0].split(" - ")[0]
                             const rightColStartTime = time.steps[1].split(" - ")[0]
 
-                            const dragOptions = {draggable: true, onDragStart: dragStartHandler, onDragEnd: dragEndHandler}
-
                             if (leftColStartTime === activity.startTime) {
-                                const draggable = activity.isEditable ? dragOptions : null
-                                leftItem = (
-                                    <div {...draggable}
-                                        ref={(el) => activityItems.current.push(el)}
-                                        data-start-time={leftColStartTime}
-                                        data-end-time={activity.endTime}
-                                        className={classNames(styles.broned, {
-                                            [styles.editable]: activity.isEditable
-                                        })}>
-                                        <div>{activity.startTime} - {activity.endTime}</div>
-                                        <div>{activity.title}</div>
-                                        {activity.isEditable && (
-                                            <SaveOutlined
-                                                onClick={onSave(roomIndex, activityIndex)}
-                                                className={styles.save}/>
-                                        )}
-                                    </div>
-                                )
+                                leftItem = renderActivity(activity, activityIndex, leftColStartTime, indexForRef)
+                                indexForRef += 1
                             }
 
                             if (rightColStartTime === activity.startTime) {
-                                const draggable = activity.isEditable ? dragOptions : null
-                                rightItem = (
-                                    <div {...draggable}
-                                         ref={(el) => activityItems.current.push(el)}
-                                         data-start-time={rightColStartTime}
-                                         data-end-time={activity.endTime}
-                                         className={classNames(styles.broned, {
-                                            [styles.editable]: activity.isEditable
-                                         })}>
-                                        <div>{activity.startTime} - {activity.endTime}</div>
-                                        <div>{activity.title}</div>
-                                        {activity.isEditable && (
-                                            <SaveOutlined
-                                                onClick={onSave(roomIndex, activityIndex)}
-                                                className={styles.save}/>
-                                        )}
-                                    </div>
-                                )
+                                rightItem = renderActivity(activity, activityIndex, rightColStartTime, indexForRef)
+                                indexForRef += 1
                             }
                         })
                         return (
@@ -380,15 +335,24 @@ const Room = () => {
                     <div>
                         <p>Начало мероприятия</p>
                         <Form.Item noStyle={true} name="start_time">
-                            <TimePicker placeholder="Select time" steps={time.steps}
-                                        min={time.min} max={time.max} format={time.format}/>
+                            <TimePicker
+                                ref={(el) => timepickers.current[0] = el}
+                                placeholder="Select time"
+                                steps={time.steps}
+                                min={time.min}
+                                max={time.max}
+                                format={time.format}/>
                         </Form.Item>
                     </div>
                     <div>
                         <p>Окончание мероприятия</p>
                         <Form.Item noStyle={true} name="end_time">
-                            <TimePicker placeholder="Select time" steps={time.steps}
-                                        min={time.min} max={time.max} format={time.format}/>
+                            <TimePicker
+                                ref={(el) => timepickers.current[1] = el}
+                                placeholder="Select time" steps={time.steps}
+                                min={time.min}
+                                max={time.max}
+                                format={time.format}/>
                         </Form.Item>
                     </div>
                     <Button type="primary" htmlType="submit">Подобрать</Button>
