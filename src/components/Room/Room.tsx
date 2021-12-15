@@ -23,15 +23,10 @@ const Room = () => {
     const timepickers = useRef<any>([])
 
     useEffect(() => {
-        console.log(activityItems)
-        timepickers.current.forEach((picker: any) => {
-            if (picker !== null) {
-                picker.element.querySelector("input").setAttribute("readonly", true)
-            }
-        })
+        setTimepickerReadOnly()
+
         setTimeout(() => {
             setWidthActivities()
-
             window.addEventListener("resize", setWidthActivities)
         }, 0)
 
@@ -39,6 +34,14 @@ const Room = () => {
             window.removeEventListener("resize", setWidthActivities)
         }
     }, [data])
+
+    function setTimepickerReadOnly() {
+        timepickers.current.forEach((picker: any) => {
+            if (picker !== null) {
+                picker.element.querySelector("input").setAttribute("readonly", true)
+            }
+        })
+    }
 
     function setWidthActivities() {
         activityItems.current.forEach((el: any) => {
