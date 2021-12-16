@@ -27,8 +27,9 @@ const Room = () => {
 
         setTimeout(() => {
             setWidthActivities()
-            window.addEventListener("resize", setWidthActivities)
         }, 0)
+
+        window.addEventListener("resize", setWidthActivities)
 
         return function () {
             window.removeEventListener("resize", setWidthActivities)
