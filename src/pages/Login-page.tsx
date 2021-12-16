@@ -26,7 +26,9 @@ const LoginPage = () => {
                             role: user.role
                         }
                         dispatch(login(obj))
-                        history.goBack()
+                        if (history.length > 2) {
+                            history.goBack()
+                        }
                     }
                 }
             })
