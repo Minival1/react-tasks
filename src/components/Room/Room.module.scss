@@ -76,22 +76,33 @@
 
 .row {
 	display: grid;
-	grid-template-columns: 250px repeat(auto-fit, minmax(40px, 1fr));
+	grid-template-columns: 250px repeat(auto-fit, minmax(20px, 1fr));
 	grid-gap: 1px;
+	position: relative;
 }
 
 .cellHead {
 	flex-direction: column;
+	box-shadow: -1px 0 1px -1px blue, 0 -1px 1px -1px blue, 0 1px 1px -1px blue;
 }
 
 .cell {
 	height: 80px;
-	box-shadow: 0 0 0 1px blue;
 	justify-content: center;
 	padding: 8px;
 	font-weight: bold;
 	font-size: 24px;
 	display: flex;
+}
+
+.left {
+	margin-right: -2px;
+	box-shadow: -1px 0 1px -1px blue, 0 -1px 1px -1px blue, 0 1px 1px -1px blue;
+}
+
+.right {
+	margin-left: -2px;
+	box-shadow: 1px 0 1px -1px blue, 0 -1px 1px -1px blue, 0 1px 1px -1px blue;
 }
 
 .cell > div {
@@ -117,9 +128,10 @@
 
 .broned {
 	position: absolute;
-	left: 0;
-	top: 0;
-	height: 100%;
+	left: 6px;
+	top: 6px;
+	right: 6px;
+	height: 84%;
 	padding: 8px 24px 8px 8px;
 	line-height: 1.4;
 	background: #dbdbdb;
@@ -144,6 +156,7 @@
 
 .editable {
 	background: #c7ebf3;
+	cursor: grab;
 
 	&:before {
 		background: #10b5d8;

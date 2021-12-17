@@ -18,40 +18,15 @@ const Room = () => {
 
     const [roomIndex, setRoomIndex] = useState<number>(-1);
     const [form] = Form.useForm()
-    const colRef = useRef<any>(null)
-    const activityItems = useRef<any>([])
-    const timepickers = useRef<any>([])
+    const timepickers = useRef<Array<any>>([])
 
     useEffect(() => {
         setTimepickerReadOnly()
-
-        setTimeout(() => {
-            setWidthActivities()
-        }, 0)
-
-        window.addEventListener("resize", setWidthActivities)
-
-        return function () {
-            window.removeEventListener("resize", setWidthActivities)
-        }
     }, [data])
 
     function setTimepickerReadOnly() {
         timepickers.current.forEach((picker: any) => {
-            if (picker !== null) {
-                picker.element.querySelector("input").setAttribute("readonly", true)
-            }
-        })
-    }
-
-    function setWidthActivities() {
-        activityItems.current.forEach((el: any) => {
-            if (el !== null) {
-                const {startTime, endTime} = el.dataset
-                const columns = getCountCols(startTime, endTime)
-                const offset = columns % 2 === 0 ? 16 : 8
-                el.style.width =((colRef.current.clientWidth * columns) / 2) - offset + "px"
-            }
+            picker.element.querySelector("input").setAttribute("readonly", true)
         })
     }
 
@@ -261,13 +236,14 @@ const Room = () => {
         dragItem.itemLength = getCountCols(startTime, endTime)
     }
 
-    function renderActivity(activity: ActivityItem, activityIndex: number, colStartTime: string, indexForRef: number): JSX.Element {
+    function renderActivity(activity: ActivityItem, activityIndex: number, colStartTime: string, startCol: number): JSX.Element {
         const dragOptions = {draggable: true, onDragStart: dragStartHandler, onDragEnd: dragEndHandler}
         const draggable = activity.isEditable ? dragOptions : null
+        const initialOffsetCols = 2
 
         return (
             <div {...draggable}
-                 ref={(el) => activityItems.current[indexForRef] = el}
+                 style={{ gridColumnStart: startCol + initialOffsetCols, gridColumnEnd: "span " + getCountCols(activity.startTime, activity.endTime) }}
                  data-start-time={colStartTime}
                  data-end-time={activity.endTime}
                  className={classNames(styles.broned, {
@@ -285,7 +261,8 @@ const Room = () => {
     }
 
     function renderGrid(): JSX.Element[] {
-        let indexForRef = 0
+        const minTime = time.list[0].time
+
         return data.map((room, roomIndex) => {
             return (
                 <div key={uuid()} className={styles.row}>
@@ -303,26 +280,26 @@ const Room = () => {
                             const rightColStartTime = time.steps[1].split(" - ")[0]
 
                             if (leftColStartTime === activity.startTime) {
-                                leftItem = renderActivity(activity, activityIndex, leftColStartTime, indexForRef)
-                                indexForRef += 1
+                                const startCol = getCountCols(minTime, leftColStartTime)
+                                leftItem = renderActivity(activity, activityIndex, leftColStartTime, startCol)
                             }
 
                             if (rightColStartTime === activity.startTime) {
-                                rightItem = renderActivity(activity, activityIndex, rightColStartTime, indexForRef)
-                                indexForRef += 1
+                                const startCol = getCountCols(minTime, rightColStartTime)
+                                rightItem = renderActivity(activity, activityIndex, rightColStartTime, startCol)
                             }
                         })
                         return (
-                            <div ref={colRef} key={uuid()} className={styles.cell}>
-                                <div data-col={time.steps[0]}
-                                    onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))}>
-                                     {leftItem}
-                                 </div>
-                                <div data-col={time.steps[1]}
-                                    onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))}>
-                                    {rightItem}
-                                </div>
-                            </div>
+                            <React.Fragment key={uuid()}>
+                                <div className={classNames(styles.cell, styles.left)}
+                                    data-col={time.steps[0]}
+                                    onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))} />
+                                <div className={classNames(styles.cell, styles.right)}
+                                     data-col={time.steps[1]}
+                                     onDragOver={throttle(100,(e) => dragOverHandler(e, roomIndex))} />
+                                {leftItem}
+                                {rightItem}
+                            </React.Fragment>
                         )})}
                 </div>
             )

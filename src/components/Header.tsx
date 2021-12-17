@@ -48,6 +48,7 @@ const HeaderComponent = () => {
                 {renderPrivateLinks()}
                 {user && (
                     <Menu.Item
+                        key="logout"
                         danger={true}
                         onClick={logoutHandler}
                         icon={<LogoutOutlined />}
