@@ -20,6 +20,7 @@ const HeaderComponent = () => {
 
     useEffect(() => {
         setSelectedKeys(findCurrentMenu())
+        // eslint-disable-next-line
     }, [location])
 
     function findCurrentMenu() {

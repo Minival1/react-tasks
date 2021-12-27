@@ -2,6 +2,7 @@ import {createSlice, PayloadAction} from '@reduxjs/toolkit'
 import {parse} from "date-fns";
 import {RootState} from '../store'
 import {ActivityItem} from "../../interfaces/Activity";
+import {RoomData} from "../../interfaces/State";
 
 interface NewActivityItem {
     newItem: ActivityItem
@@ -24,7 +25,6 @@ interface ActivityIndex {
 interface Time {
     format: string
 }
-
 
 type AddEventPayload = Room & NewActivityItem & Time
 type MoveEventPayload = Room & NewActivityItem & DragItem & Time
@@ -74,7 +74,7 @@ export const roomSlice = createSlice({
                     },
                 ]
             },
-        ]
+        ] as Array<RoomData>,
     },
     reducers: {
         addEvent: ({data}, {payload}: PayloadAction<AddEventPayload>) => {
